@@ -63,6 +63,9 @@ int pos = 90;
 byte driveDeadBandRange = 10;
 Sabertooth *SyR = new Sabertooth(SYREN_ADDR, Serial1);
 Sabertooth *ST = new Sabertooth(SABERTOOTH_ADDR, Serial1);
+int domeRotationSpeed;
+int footTurnSpeed;
+int footDriveSpeed;
 
 
 // ---------------------------------------------------------------------------------------
@@ -306,6 +309,9 @@ void checkController()
             
             previousMillis = millis();
             extraClicks = true;
+
+            ST->stop();                       // STOP ALL MOTORS
+            SyR->stop();
      }
 
      if (PS3Controller->PS3Connected && !extraClicks && PS3Controller->getButtonPress(R1))
@@ -379,9 +385,16 @@ void checkController()
                 strcat(output, "\r\n");
             #endif
 
-            char vol[5];
-            MP3Trigger.setVolume(map(currentValueY, 127, -128, 0, 255));
-            strcat(output, itoa(map(currentValueY, 127, -128, 0, 255), vol, 10));
+            //char vol[5];
+            //MP3Trigger.setVolume(map(currentValueY, 127, -128, 0, 255));
+            //strcat(output, itoa(map(currentValueY, 127, -128, 0, 255), vol, 10));
+
+            footDriveSpeed = currentValueY;
+            footTurnSpeed = currentValueX;
+            ST->drive(footDriveSpeed);
+            ST->turn(footTurnSpeed);
+
+            
      }
 
      if (PS3Controller->PS3Connected && ((abs(PS3Controller->getAnalogHat(RightHatY)-128) > joystickDeadZoneRange) || (abs(PS3Controller->getAnalogHat(RightHatX)-128) > joystickDeadZoneRange)))
@@ -402,7 +415,14 @@ void checkController()
                 strcat(output, "RIGHT Joystick X Value: ");
                 strcat(output, xString);
                 strcat(output, "\r\n");
-            #endif       
+            #endif      
+
+            // test dome motor
+            domeRotationSpeed = currentValueX;
+            if(abs(domeRotationSpeed) <= 5) domeRotationSpeed = 0;
+            SyR->motor(domeRotationSpeed);
+            
+
      }
 }
 
@@ -596,4 +616,13 @@ void printOutput(const char *value)
         if (Serial) Serial.println(value);
         strcpy(output, ""); // Reset output string
     }
+}
+
+
+// =======================================================================================
+//          Drive Motor - Ramp UP and DOWN
+// =======================================================================================
+
+void rampDriveUp(int speedReqX, speedReqY){
+  
 }
