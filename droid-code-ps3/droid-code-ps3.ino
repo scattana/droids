@@ -24,6 +24,9 @@
 // Sound system library
 #include <MP3Trigger.h>
 
+// Motor control library
+#include <Sabertooth.h>
+
 
 
 // ---------------------------------------------------------------------------------------
@@ -51,6 +54,16 @@ PS3BT *PS3Controller=new PS3BT(&Btd);
 // ---------------------------------------------------------------------------------------
 Servo myServo;
 int pos = 90;
+
+// ---------------------------------------------------------------------------------------
+//                Setup for motor controls (Syren/Dome and Sabertooth/Foot)
+// ---------------------------------------------------------------------------------------
+#define SYREN_ADDR        129
+#define SABERTOOTH_ADDR   128
+byte driveDeadBandRange = 10;
+Sabertooth *SyR = new Sabertooth(SYREN_ADDR, Serial1);
+Sabertooth *ST = new Sabertooth(SABERTOOTH_ADDR, Serial1);
+
 
 // ---------------------------------------------------------------------------------------
 //                 Setup for MP3 Trigger/Sound System
@@ -128,6 +141,15 @@ void setup()
     // SOUND SYSTEM setup
     MP3Trigger.setup(&Serial2);
     Serial2.begin(MP3Trigger::serialRate());
+
+    // DOME MOTOR system setup (Spur Gear)
+    Serial1.begin(9600);
+    ST->autobaud();
+    ST->setTimeout(10);                               // 100 ms increments...1 second timeout
+    ST->setDeadband(driveDeadBandRange);
+    SyR->autobaud();
+    SyR->setTimeout(20);                              // 100 ms increments...2 second timeout
+    SyR->stop();
 }
 
 // =======================================================================================
@@ -448,6 +470,8 @@ boolean criticalFaultDetect()
             #endif
             
 //          You would stop all motors here
+            ST->stop();
+            SyR->stop();
             isFootMotorStopped = true;
         }
         
@@ -459,6 +483,8 @@ boolean criticalFaultDetect()
             #endif
             
 //          You would stop all motors here
+            ST->stop();
+            SyR->stop();
             isFootMotorStopped = true;
             
             PS3Controller->disconnect();
@@ -486,7 +512,6 @@ boolean criticalFaultDetect()
         }
         else if (badPS3Data > 0)
         {
-
             badPS3Data = 0;
         }
         
@@ -498,6 +523,8 @@ boolean criticalFaultDetect()
             #endif
             
 //          You would stop all motors here
+            ST->stop();
+            SyR->stop();
             isFootMotorStopped = true;
             
             PS3Controller->disconnect();
@@ -513,6 +540,8 @@ boolean criticalFaultDetect()
         #endif
         
 //      You would stop all motors here
+        ST->stop();
+        SyR->stop();
         isFootMotorStopped = true;
         
         WaitingforReconnect = true;
